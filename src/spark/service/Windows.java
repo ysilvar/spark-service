@@ -6,21 +6,22 @@
 package spark.service;
 
 import java.awt.AWTException;
+import java.awt.Desktop;
 import java.awt.Graphics;
+import java.awt.MenuItem;
+import java.awt.PopupMenu;
 import java.awt.SystemTray;
 import java.awt.TrayIcon;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.net.URI;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
-import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
-import javax.swing.JPopupMenu;
 import javax.swing.Timer;
 
 /**
@@ -29,42 +30,59 @@ import javax.swing.Timer;
  */
 public class Windows extends JFrame {
 
-    private JPopupMenu pop;
+    private PopupMenu pop;
     private ImageIcon icono, fondo;
     private TrayIcon trayicon;
     private Windows windows;
     private GetContext contex;
-  
+    private ReadConfig readConfig;
 
     public Windows() throws FileNotFoundException {
         windows = this;
-     
+
         contex = new GetContext();
+        readConfig = new ReadConfig();
         if (SystemTray.isSupported()) {
 
             icono = new ImageIcon(getClass().getResource("../ok.png"));
             fondo = new ImageIcon(getClass().getResource("../fondo.jpg"));
-            pop = new JPopupMenu();
-            JMenuItem interfaz = new JMenuItem("Interfaz Grafica");
+            pop = new PopupMenu();
+            MenuItem interfaz = new MenuItem("Interfaz Grafica");
             interfaz.addActionListener(new ActionListener() {
 
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     windows.setVisible(true);
-                    pop.setVisible(false);
                 }
 
             });
-
+            
+            MenuItem webItem = new MenuItem("Show master in browser");
+            webItem.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    try {
+                        Desktop.getDesktop().browse(URI.create("http://"+
+                                readConfig.getSystemVariable("SPARK_MASTER_IP")+
+                         ":" + readConfig.getSystemVariable("SPARK_MASTER_WEBUI_PORT")));
+                    } catch (IOException e1) {
+                        e1.printStackTrace();
+                    }
+                }
+            });
             pop.add(interfaz);
+            pop.add(webItem);
 
-            JMenuItem salir = new JMenuItem("Salir");
+            MenuItem salir = new MenuItem("Salir");
             salir.addActionListener(new ActionListener() {
 
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    windows.contex.getProccess().destroyForcibly();
-                  
+                    try {
+                         windows.contex.stopSlave();
+                    } catch (IOException ex) {
+                        Logger.getLogger(Windows.class.getName()).log(Level.SEVERE, null, ex);
+                    }
 
                     System.exit(0);
                 }
@@ -73,16 +91,7 @@ public class Windows extends JFrame {
             pop.addSeparator();
             pop.add(salir);
 
-            trayicon = new TrayIcon(icono.getImage(), "Service Slave", null);
-            trayicon.addMouseListener(new MouseAdapter() {
-
-                @Override
-                public void mouseReleased(MouseEvent e) {
-                    pop.setVisible(true);
-                    pop.setLocation(e.getX(), e.getY() - 80);
-                }
-
-            });
+            trayicon = new TrayIcon(icono.getImage(), "Service Slave", pop);
 
             try {
                 SystemTray.getSystemTray().add(trayicon);
@@ -110,12 +119,11 @@ public class Windows extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
-                    GetContext nvo = new GetContext();
-                    if (windows.contex.compareTo(nvo) == 0) 
-                    {
+                    ReadConfig nvo = new ReadConfig();
+                    if (windows.readConfig.compareTo(nvo) == 0) {
                         System.out.println("cambio");
-                        
-                       windows.contex.setConf(nvo.getConf());      
+
+                        windows.readConfig = nvo;
                     }
                     if (windows.contex.testConextion()) {
                         //p.icono = new ImageIcon(getClass().getResource("../ok.png"));
@@ -125,15 +133,14 @@ public class Windows extends JFrame {
                         }
 
                         windows.trayicon.setToolTip("Service Slave: Master Runing");
-                        
+
                     } else {
                         windows.trayicon.setToolTip("Service Slave: Master stop");
                         if (windows.contex.isSlaveRun()) {
                             System.out.println("Entro al master-stop");
-                            windows.contex.getProccess().destroy();
-                            windows.contex.setProcess(null);
+                            windows.contex.stopSlave();
                         }
-                       
+
                     }
                 } catch (FileNotFoundException ex) {
                     Logger.getLogger(Windows.class.getName()).log(Level.SEVERE, null, ex);
