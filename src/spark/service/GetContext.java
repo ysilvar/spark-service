@@ -5,11 +5,16 @@
  */
 package spark.service;
 
+import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.lang.reflect.Field;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.lang.management.ManagementFactory;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.LinkedList;
+import java.util.List;
 
 import javax.net.ssl.HttpsURLConnection;
 
@@ -17,13 +22,13 @@ import javax.net.ssl.HttpsURLConnection;
  *
  * @author eduardo
  */
-public class GetContext implements Comparable<GetContext> {
+public class GetContext {
 
-    private ReadConfig conf;
     private Process process;
+    private String pid;
 
     public GetContext() throws FileNotFoundException {
-        conf = new ReadConfig();
+        process = null;
     }
 
     private boolean conexionGET(String request) {
@@ -49,61 +54,95 @@ public class GetContext implements Comparable<GetContext> {
     }
 
     public void startSlave() throws IOException, Exception {
+        ReadConfig conf = new ReadConfig();
         if (conexionGET("http://" + conf.getSystemVariable("SPARK_MASTER_IP") + ":"
                 + conf.getSystemVariable("SPARK_MASTER_WEBUI_PORT"))) {
             System.out.println("Se conecto correctamente al master");
             String home = System.getenv("SPARK_HOME");
-            process = Runtime.getRuntime().exec(home + "\\sbin\\start-slave.cmd");
-//            Field declaredField = process.getClass().getDeclaredField("");
-            Field[] declaredFields = process.getClass().getDeclaredFields();
-            for (Field declaredField : declaredFields) {
-                declaredField.setAccessible(true);
-            System.out.println(declaredField.get(process));
-//                System.out.println(declaredField.getName());
-            }
-//            declaredField.setAccessible(true);
-//            System.out.println(process.getClass().getDeclaredField("pid").toString());
+           
+               List temp = chechProcess();
+                process = Runtime.getRuntime().exec(home + "\\sbin\\start-slave.cmd");
+                Thread.sleep(500);
+                setPid(temp,chechProcess());
+
         } else {
             throw new Exception("Error al conectar al master");
         }
     }
 
-    public boolean testConextion() {
-
+    public boolean testConextion() throws FileNotFoundException, IOException {
+        ReadConfig conf = new ReadConfig();
         return conexionGET("http://" + conf.getSystemVariable("SPARK_MASTER_IP") + ":"
                 + conf.getSystemVariable("SPARK_MASTER_WEBUI_PORT"));
 
     }
 
     public boolean isSlaveRun() {
-        System.out.println(conexionGET("http://127.0.0.1:8081"));
-        return conexionGET("http://127.0.0.1:8081");
-    }
 
-    public static void main(String[] args) throws FileNotFoundException {
-        GetContext g = new GetContext();
-        System.out.println(g.isSlaveRun());
+        return conexionGET("http://127.0.0.1:8081");
     }
 
     public Process getProccess() {
         return process;
     }
 
-    public void setConf(ReadConfig conf) {
-        this.conf = conf;
+    public void setProcess(Process process) {
+        this.process = process;
     }
 
-    public ReadConfig getConf() {
-        return conf;
+    public String getPid() {
+        return pid;
     }
 
-    @Override
-    public int compareTo(GetContext nvo) {
-        for (int i = 0; i < conf.getConfig().size(); i++) {
-            if (!conf.getConfig().get(i).equals(nvo.conf.getConfig().get(i))) {
-                return 0;
+    private List<String> chechProcess() throws IOException {
+        List<String> list = new LinkedList<>();
+        Process s = Runtime.getRuntime().exec("tasklist");
+        BufferedReader br = new BufferedReader(new InputStreamReader(s.getInputStream()));
+        String readLine = br.readLine();
+        while (readLine != null) {
+            String[] tem = readLine.split(" ");
+            if (tem[0].equals("java.exe")) {
+                for (String tem1 : tem) {
+                    try {
+
+                        int x = Integer.parseInt(tem1);
+                        list.add(tem1);
+                        
+                        break;
+                    } catch (NumberFormatException e) {
+
+                    }
+                }
+            }
+            readLine = br.readLine();
+          
+        }
+        return list;
+    }
+
+    public static void main(String[] args) throws IOException, InterruptedException {
+        GetContext x = new GetContext();
+            x.chechProcess();
+
+    }
+
+    private void setPid(List<String> a,List<String> b) {
+         String tem = ManagementFactory.getRuntimeMXBean().getName();
+                tem = tem.substring(0,tem.indexOf("@"));
+        for (String b1 : b) {
+            for (String a1 : a) {
+                if (!b1.equals(a1) && !b1.equals(tem)) {
+                    pid = b1;
+                    
+                }
+               
             }
         }
-        return 1;
+        System.out.println("pid "+pid);
+    }
+    
+    public void stopSlave() throws IOException{
+      Process tem = Runtime.getRuntime().exec("taskkill /pid " + getPid() + " /f");
+
     }
 }
