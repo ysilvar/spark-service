@@ -30,7 +30,11 @@ public class GetContext {
     public GetContext() throws FileNotFoundException {
         process = null;
     }
-
+    /**
+     * 
+     * @param request Receive a string that corresponds to the web url of the master.
+     * @return true if exist the conection,false in other case.
+     */
     private boolean conexionGET(String request) {
 
         try {
@@ -52,7 +56,11 @@ public class GetContext {
         }
         return true;
     }
-
+    /**
+     * run to slave in the existing configuration in the file "spark-env.cmd".
+     * @throws IOException
+     * @throws Exception 
+     */
     public void startSlave() throws IOException, Exception {
         ReadConfig conf = new ReadConfig();
         if (conexionGET("http://" + conf.getSystemVariable("SPARK_MASTER_IP") + ":"
@@ -69,14 +77,22 @@ public class GetContext {
             throw new Exception("Error al conectar al master");
         }
     }
-
+    /**
+     * 
+     * @return true if exist the conection to the master, false in other case. 
+     * @throws FileNotFoundException
+     * @throws IOException 
+     */
     public boolean testConextion() throws FileNotFoundException, IOException {
         ReadConfig conf = new ReadConfig();
         return conexionGET("http://" + conf.getSystemVariable("SPARK_MASTER_IP") + ":"
                 + conf.getSystemVariable("SPARK_MASTER_WEBUI_PORT"));
 
     }
-
+    /**
+     * 
+     * @return true if exist the conection to the slave, false in other case. 
+     */
     public boolean isSlaveRun() {
 
         return conexionGET("http://127.0.0.1:8081");
