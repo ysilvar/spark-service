@@ -7,7 +7,6 @@ package spark.service;
 
 import java.awt.AWTException;
 import java.awt.Desktop;
-import java.awt.Graphics;
 import java.awt.MenuItem;
 import java.awt.PopupMenu;
 import java.awt.SystemTray;
@@ -20,58 +19,96 @@ import java.net.URI;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.ImageIcon;
-import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.Timer;
 
 /**
  *
- * @author eduardo
+ * @author Yorlay Silva Rodriguez
  */
-public class Windows extends JFrame {
+public class Windows {
 
     private PopupMenu pop;
-    private ImageIcon icono, fondo;
+    private ImageIcon icono;
     private TrayIcon trayicon;
     private Windows windows;
     private GetContext contex;
     private ReadConfig readConfig;
+    private boolean manualStop;
+    private InterfazGrafica interfaz;
 
-    public Windows() throws FileNotFoundException {
+    public Windows() throws FileNotFoundException, IOException {
         windows = this;
-
         contex = new GetContext();
         readConfig = new ReadConfig();
+        
+        System.out.println(readConfig.getConfig().length);
+        manualStop = false;
+        interfaz = new InterfazGrafica();
+
         if (SystemTray.isSupported()) {
 
             icono = new ImageIcon(getClass().getResource("../ok.png"));
-            fondo = new ImageIcon(getClass().getResource("../fondo.jpg"));
+           // fondo = new ImageIcon(getClass().getResource("../fondo.jpg"));
             pop = new PopupMenu();
-            MenuItem interfaz = new MenuItem("Interfaz Grafica");
-            interfaz.addActionListener(new ActionListener() {
+            MenuItem btnInterfaz = new MenuItem("Configure Slave");
+            btnInterfaz.addActionListener(new ActionListener() {
 
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    windows.setVisible(true);
+                    interfaz.setVisible(true);
                 }
 
             });
-            
+
             MenuItem webItem = new MenuItem("Show master in browser");
             webItem.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     try {
-                        Desktop.getDesktop().browse(URI.create("http://"+
-                                readConfig.getSystemVariable("SPARK_MASTER_IP")+
-                         ":" + readConfig.getSystemVariable("SPARK_MASTER_WEBUI_PORT")));
+                        Desktop.getDesktop().browse(URI.create("http://"
+                                + readConfig.getSystemVariable("SPARK_MASTER_IP")
+                                + ":" + readConfig.getSystemVariable("SPARK_MASTER_WEBUI_PORT")));
                     } catch (IOException e1) {
                         e1.printStackTrace();
                     }
                 }
             });
-            pop.add(interfaz);
+            MenuItem webClient = new MenuItem("Show slave in browser");
+            webItem.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    try {
+                        Desktop.getDesktop().browse(URI.create("http://127.0.0.1:8081"));
+                    } catch (IOException e1) {
+                        e1.printStackTrace();
+                    }
+                }
+            });
+
+            MenuItem action = new MenuItem(action());
+            action.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+
+                    try {
+                        if (!manualStop) {
+                            contex.stopSlave();
+                            System.out.println("stop------slave");
+                        }
+                    } catch (IOException ex) {
+                        Logger.getLogger(Windows.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                    manualStop = !manualStop;
+                    MenuItem action = (MenuItem) e.getSource();
+                    action.setLabel(action());
+                }
+            });
+
+            pop.add(btnInterfaz);
             pop.add(webItem);
+            pop.add(webClient);
+            pop.add(action);
 
             MenuItem salir = new MenuItem("Salir");
             salir.addActionListener(new ActionListener() {
@@ -79,7 +116,7 @@ public class Windows extends JFrame {
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     try {
-                         windows.contex.stopSlave();
+                        contex.stopSlave();
                     } catch (IOException ex) {
                         Logger.getLogger(Windows.class.getName()).log(Level.SEVERE, null, ex);
                     }
@@ -106,14 +143,16 @@ public class Windows extends JFrame {
 
     }
 
-    public void paint(Graphics g) {
-        g.drawImage(fondo.getImage(), 0, 15, 500, 400, this);
+   
+
+    private String action() {
+
+        return !contex.isSlaveRun() ? "Stop Slave" : "Start Slave";
     }
 
-    public static void main(String arg[]) throws FileNotFoundException {
+    public static void main(String arg[]) throws FileNotFoundException, IOException {
         Windows windows = new Windows();
-        /* Hay que comparar las clases readConf y dejar historico...
-         */
+        
         Timer timer = new Timer(900, new ActionListener() {
 
             @Override
@@ -121,14 +160,14 @@ public class Windows extends JFrame {
                 try {
                     ReadConfig nvo = new ReadConfig();
                     if (windows.readConfig.compareTo(nvo) == 0) {
-                        System.out.println("cambio");
-
+                       
                         windows.readConfig = nvo;
                     }
                     if (windows.contex.testConextion()) {
                         //p.icono = new ImageIcon(getClass().getResource("../ok.png"));
-                        if (!windows.contex.isSlaveRun()) {
+                        if (!windows.contex.isSlaveRun() && !windows.manualStop) {
                             windows.contex.startSlave();
+                            windows.pop.getItem(3).setLabel(windows.action());
 
                         }
 
@@ -139,6 +178,8 @@ public class Windows extends JFrame {
                         if (windows.contex.isSlaveRun()) {
                             System.out.println("Entro al master-stop");
                             windows.contex.stopSlave();
+                            windows.pop.getItem(3).setLabel(windows.action());
+
                         }
 
                     }
@@ -150,8 +191,8 @@ public class Windows extends JFrame {
             }
         });
         timer.start();
-        windows.setBounds(0, 0, 500, 400);
-        windows.setLocationRelativeTo(null);
+        
 
     }
+
 }

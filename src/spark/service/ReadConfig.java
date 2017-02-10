@@ -17,7 +17,7 @@ import java.util.regex.Pattern;
 
 /**
  *
- * @author eduardo
+ * @author Yorlay Silva Rodriguez
  */
 public class ReadConfig implements Comparable<ReadConfig> {
 

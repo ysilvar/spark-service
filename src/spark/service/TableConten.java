@@ -7,7 +7,7 @@ package spark.service;
 
 /**
  *
- * @author eduardo
+ * @author Yorlay Silva Rodriguez
  */
 public class TableConten {
     private boolean status;
