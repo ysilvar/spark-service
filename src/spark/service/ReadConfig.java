@@ -23,22 +23,22 @@ public class ReadConfig implements Comparable<ReadConfig> {
 
     private HashMap<String, String> systemaVarible;
     private String[] config;
-   
 
     public ReadConfig() throws FileNotFoundException, IOException {
-        
+        systemaVarible = new HashMap<>();
         String config = (System.getenv("SPARK_CONF_DIR") == null)
                 ? System.getenv("SPARK_HOME") + "\\conf\\spark-env.cmd" : System.getenv("SPARK_CONF_DIR") + "\\spark-env.cmd";
 
         readFile(new File(config));
-        
+
     }
 
     public String[] getConfig() {
         return config;
     }
+
     /**
-     * 
+     *
      * @param str.Spark variable name
      * @return spark variable value if exist, null in other case.
      */
@@ -56,17 +56,17 @@ public class ReadConfig implements Comparable<ReadConfig> {
         }
         return 1;
     }
+
     /**
-     * 
+     *
      * @param file.Configuration file "spark-env.cmd"
      * @throws FileNotFoundException
-     * @throws IOException 
+     * @throws IOException
      */
     public void readFile(File file) throws FileNotFoundException, IOException {
-        
+
         FileReader fil = new FileReader(file);
         BufferedReader read = new BufferedReader(fil);
-        
 
         String line = read.readLine();
         String result = "";
@@ -79,9 +79,10 @@ public class ReadConfig implements Comparable<ReadConfig> {
                 pat = Pattern.compile("[a-zA-Z_:.=0-9/$}{)(%-]+");
                 mat = pat.matcher(s);
 
-                if (mat.matches()) 
+                if (mat.matches()) {
                     tem += s + " ";
-                
+                }
+
             }
             String label = Constants.getInstance().getOS().equals("Windows") ? "^set.+" : "^.+";
             pat = Pattern.compile(label);
@@ -91,47 +92,39 @@ public class ReadConfig implements Comparable<ReadConfig> {
                 items = pat.split(tem);
                 systemaVarible.put(items[1], items[2]);
             }
-            result +=  tem + "\n";
+            result += tem + "\n";
             line = read.readLine();
         }
         config = result.split("\n");
     }
-    public ArrayList<TableConten> tableData(){
-        String [] temp = config;
-        ArrayList<TableConten> tem = new ArrayList<TableConten>();  
+
+    public ArrayList<TableConten> tableData() {
+        String[] temp = config;
+        ArrayList<TableConten> tem = new ArrayList<TableConten>();
         Pattern pattern;
         Matcher matcher;
-        if (Constants.getInstance().getOS().equals("Windows") ) {
-            for (String temp1 : temp) {
-                System.out.println(temp1);
+        if (Constants.getInstance().getOS().equals("Windows")) {
+            for (String tem1 : temp) {
+
                 pattern = Pattern.compile("^REM.+");
-                matcher = pattern.matcher(temp1);
+                matcher = pattern.matcher(tem1);
                 if (matcher.matches()) {
                     pattern = Pattern.compile("^REM[^A-Z=_0-9]+");
-                    String [] item = pattern.split(temp1);
-                    for (String item1 : item) {
-                       pattern = Pattern.compile("[A-Z_(?==)[0-9]|localhost]+");
-                       matcher = pattern.matcher(item1);
-                      
-                        if (matcher.matches()) {
-                            System.out.println(item1.toString());
-                          //tem.add(new TableConten(false, item1.split("=")[0], item1.split("=")[1], null));
-                        }else{
-                            System.out.println("nononono");
-                         //tem.add(new TableConten(false, item1,null, null));
-                        }
+                     String[] items = pattern.split(tem1);
+                     for (String item : items) {
+                        
                     }
                 }
-               
-                
             }
+
         }
-    
-    return tem;
+
+        return tem;
     }
+
     public static void main(String[] args) throws IOException {
-        ReadConfig x =new ReadConfig();
-        
-       x.tableData();
+        ReadConfig x = new ReadConfig();
+
+        x.tableData();
     }
 }

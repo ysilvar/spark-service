@@ -12,13 +12,16 @@ package spark.service;
 public class Constants {
     private String COMMENTARY;
     private String SEPARATOR;
+    private String OS; 
     private Constants() {
         if (System.getenv("OS").equals("Windows_NT")) {
             COMMENTARY = "REM";
             SEPARATOR  = "\\";
+            OS = "Windows";
         }else{
           COMMENTARY = "#";
           SEPARATOR  = "/";
+          OS = "Linux";
         }
     }
     
@@ -37,6 +40,10 @@ public class Constants {
 
     public String getSEPARATOR() {
         return SEPARATOR;
+    }
+
+    public String getOS() {
+        return OS;
     }
     
 }

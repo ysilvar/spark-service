@@ -21,6 +21,7 @@ import java.util.logging.Logger;
 import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
 import javax.swing.Timer;
+import spark.Caca;
 
 /**
  *
@@ -75,7 +76,7 @@ public class Windows {
                 }
             });
             MenuItem webClient = new MenuItem("Show slave in browser");
-            webItem.addActionListener(new ActionListener() {
+            webClient.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     try {
