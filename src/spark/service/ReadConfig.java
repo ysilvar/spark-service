@@ -23,12 +23,10 @@ public class ReadConfig implements Comparable<ReadConfig> {
 
     private HashMap<String, String> systemaVarible;
     private String[] config;
-    private String os;
-    private final String OS_WIN = "Windows_NT";
+   
 
     public ReadConfig() throws FileNotFoundException, IOException {
-        systemaVarible = new HashMap<>();
-        os = System.getenv("OS");
+        
         String config = (System.getenv("SPARK_CONF_DIR") == null)
                 ? System.getenv("SPARK_HOME") + "\\conf\\spark-env.cmd" : System.getenv("SPARK_CONF_DIR") + "\\spark-env.cmd";
 
@@ -66,11 +64,11 @@ public class ReadConfig implements Comparable<ReadConfig> {
      */
     public void readFile(File file) throws FileNotFoundException, IOException {
         
-        FileReader fl = new FileReader(file);
-        BufferedReader br = new BufferedReader(fl);
+        FileReader fil = new FileReader(file);
+        BufferedReader read = new BufferedReader(fil);
         
 
-        String line = br.readLine();
+        String line = read.readLine();
         String result = "";
         while (line != null) {
             Pattern pat = Pattern.compile("[^a-zA-Z_:.=0-9/$}{)(%-]+");
@@ -85,7 +83,7 @@ public class ReadConfig implements Comparable<ReadConfig> {
                     tem += s + " ";
                 
             }
-            String label = os.equals(OS_WIN) ? "^set.+" : "^.+";
+            String label = Constants.getInstance().getOS().equals("Windows") ? "^set.+" : "^.+";
             pat = Pattern.compile(label);
             mat = pat.matcher(tem);
             if (mat.matches()) {
@@ -94,31 +92,46 @@ public class ReadConfig implements Comparable<ReadConfig> {
                 systemaVarible.put(items[1], items[2]);
             }
             result +=  tem + "\n";
-            line = br.readLine();
+            line = read.readLine();
         }
         config = result.split("\n");
     }
-    private Object [][] tableData(){
+    public ArrayList<TableConten> tableData(){
         String [] temp = config;
         ArrayList<TableConten> tem = new ArrayList<TableConten>();  
-        if (os.equals(OS_WIN) ) {
-             Pattern pat = Pattern.compile("^[]+");
-               Matcher mat ;
+        Pattern pattern;
+        Matcher matcher;
+        if (Constants.getInstance().getOS().equals("Windows") ) {
             for (String temp1 : temp) {
-                mat = pat.matcher(temp1);
-                if (temp1.startsWith("REM - ")) {
-               
-                 
+                System.out.println(temp1);
+                pattern = Pattern.compile("^REM.+");
+                matcher = pattern.matcher(temp1);
+                if (matcher.matches()) {
+                    pattern = Pattern.compile("^REM[^A-Z=_0-9]+");
+                    String [] item = pattern.split(temp1);
+                    for (String item1 : item) {
+                       pattern = Pattern.compile("[A-Z_(?==)[0-9]|localhost]+");
+                       matcher = pattern.matcher(item1);
+                      
+                        if (matcher.matches()) {
+                            System.out.println(item1.toString());
+                          //tem.add(new TableConten(false, item1.split("=")[0], item1.split("=")[1], null));
+                        }else{
+                            System.out.println("nononono");
+                         //tem.add(new TableConten(false, item1,null, null));
+                        }
+                    }
                 }
+               
+                
             }
         }
     
-    return new String [][]{};
+    return tem;
     }
     public static void main(String[] args) throws IOException {
-        String config = (System.getenv("SPARK_CONF_DIR") == null)
-                ? System.getenv("SPARK_HOME") + "\\conf\\spark-env.cmd"
-                : System.getenv("SPARK_CONF_DIR") + "\\spark-env.cmd";
-        new ReadConfig().readFile(new File(config));
+        ReadConfig x =new ReadConfig();
+        
+       x.tableData();
     }
 }
