@@ -10,9 +10,9 @@ package spark.service;
  * @author Yorlay Silva Rodriguez
  */
 public class Constants {
-    private String COMMENTARY;
-    private String SEPARATOR;
-    private String OS; 
+    private final String COMMENTARY;
+    private final String SEPARATOR;
+    private final String OS; 
     private Constants() {
         if (System.getenv("OS").equals("Windows_NT")) {
             COMMENTARY = "REM";

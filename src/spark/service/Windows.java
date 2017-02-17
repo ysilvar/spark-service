@@ -21,7 +21,6 @@ import java.util.logging.Logger;
 import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
 import javax.swing.Timer;
-import spark.Caca;
 
 /**
  *
@@ -39,18 +38,25 @@ public class Windows {
     private InterfazGrafica interfaz;
 
     public Windows() throws FileNotFoundException, IOException {
-        windows = this;
+      
         contex = new GetContext();
         readConfig = new ReadConfig();
-        
-        System.out.println(readConfig.getConfig().length);
+
         manualStop = false;
         interfaz = new InterfazGrafica();
+        
+        try {
+            interfaz.addData(readConfig.tableData());
+        } catch (Exception ex) {
+            
+            
+        }
+        
 
         if (SystemTray.isSupported()) {
 
             icono = new ImageIcon(getClass().getResource("../ok.png"));
-           // fondo = new ImageIcon(getClass().getResource("../fondo.jpg"));
+            // fondo = new ImageIcon(getClass().getResource("../fondo.jpg"));
             pop = new PopupMenu();
             MenuItem btnInterfaz = new MenuItem("Configure Slave");
             btnInterfaz.addActionListener(new ActionListener() {
@@ -144,54 +150,56 @@ public class Windows {
 
     }
 
-   
+    public PopupMenu getPop() {
+        return pop;
+    }
 
-    private String action() {
+    public void setPop(PopupMenu pop) {
+        this.pop = pop;
+    }
+
+    public boolean isManualStop() {
+        return manualStop;
+    }
+
+    public void setManualStop(boolean manualStop) {
+        this.manualStop = manualStop;
+    }
+  
+    public void setContex(GetContext contex) {
+        this.contex = contex;
+    }
+
+    public void setReadConfig(ReadConfig readConfig) {
+        this.readConfig = readConfig;
+    }
+
+    public GetContext getContex() {
+        return contex;
+    }
+
+    public ReadConfig getReadConfig() {
+        return readConfig;
+    }
+
+    public String action() {
 
         return !contex.isSlaveRun() ? "Stop Slave" : "Start Slave";
     }
 
+    public TrayIcon getTrayicon() {
+        return trayicon;
+    }
+
+    public void setTrayicon(TrayIcon trayicon) {
+        this.trayicon = trayicon;
+    }
+
     public static void main(String arg[]) throws FileNotFoundException, IOException {
-        Windows windows = new Windows();
         
-        Timer timer = new Timer(900, new ActionListener() {
-
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                try {
-                    ReadConfig nvo = new ReadConfig();
-                    if (windows.readConfig.compareTo(nvo) == 0) {
-                       
-                        windows.readConfig = nvo;
-                    }
-                    if (windows.contex.testConextion()) {
-                        //p.icono = new ImageIcon(getClass().getResource("../ok.png"));
-                        if (!windows.contex.isSlaveRun() && !windows.manualStop) {
-                            windows.contex.startSlave();
-                            windows.pop.getItem(3).setLabel(windows.action());
-
-                        }
-
-                        windows.trayicon.setToolTip("Service Slave: Master Runing");
-
-                    } else {
-                        windows.trayicon.setToolTip("Service Slave: Master stop");
-                        if (windows.contex.isSlaveRun()) {
-                            System.out.println("Entro al master-stop");
-                            windows.contex.stopSlave();
-                            windows.pop.getItem(3).setLabel(windows.action());
-
-                        }
-
-                    }
-                } catch (FileNotFoundException ex) {
-                    Logger.getLogger(Windows.class.getName()).log(Level.SEVERE, null, ex);
-                } catch (Exception ex) {
-                    Logger.getLogger(Windows.class.getName()).log(Level.SEVERE, null, ex);
-                }
-            }
-        });
-        timer.start();
+        Windows windows = new Windows();
+        RunWin run = new RunWin(windows);
+               run.start();
         
 
     }

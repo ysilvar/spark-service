@@ -82,15 +82,20 @@ public class ReadConfig implements Comparable<ReadConfig> {
                 if (mat.matches()) {
                     tem += s + " ";
                 }
-
             }
-            String label = Constants.getInstance().getOS().equals("Windows") ? "^set.+" : "^.+";
+            String label = Constants.getInstance().getOS().equals("Windows") ? "^set.+" : "^#.+";
             pat = Pattern.compile(label);
             mat = pat.matcher(tem);
             if (mat.matches()) {
                 pat = Pattern.compile("[^A-Z0-9._]+");
                 items = pat.split(tem);
+                try {
                 systemaVarible.put(items[1], items[2]);
+                } catch ( ArrayIndexOutOfBoundsException e) {
+                    systemaVarible = null;
+                    return;
+                }
+
             }
             result += tem + "\n";
             line = read.readLine();
@@ -98,23 +103,23 @@ public class ReadConfig implements Comparable<ReadConfig> {
         config = result.split("\n");
     }
 
-    public ArrayList<TableConten> tableData() {
+    public ArrayList<TableConten> tableData() throws Exception {
         String[] temp = config;
         ArrayList<TableConten> tem = new ArrayList<TableConten>();
         Pattern pattern;
         Matcher matcher;
         if (Constants.getInstance().getOS().equals("Windows")) {
             for (String tem1 : temp) {
+                if (tem1.startsWith(Constants.getInstance().getCOMMENTARY())) {
+                    
+                } else if (tem1.startsWith("set")) {
+                    tem1 = tem1.replace("set", "");
+                    String[] value = tem1.split("=");
 
-                pattern = Pattern.compile("^REM.+");
-                matcher = pattern.matcher(tem1);
-                if (matcher.matches()) {
-                    pattern = Pattern.compile("^REM[^A-Z=_0-9]+");
-                     String[] items = pattern.split(tem1);
-                     for (String item : items) {
-                        
-                    }
+                    tem.add(new TableConten(true, value[0], value[1], null));
+
                 }
+
             }
 
         }
@@ -122,7 +127,7 @@ public class ReadConfig implements Comparable<ReadConfig> {
         return tem;
     }
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, Exception {
         ReadConfig x = new ReadConfig();
 
         x.tableData();
