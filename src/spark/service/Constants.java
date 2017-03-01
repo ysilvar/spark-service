@@ -13,7 +13,9 @@ public class Constants {
     private final String COMMENTARY;
     private final String SEPARATOR;
     private final String OS; 
+    private final String SPARKHOME;
     private Constants() {
+            SPARKHOME = System.getenv("SPARK_HOME");
         if (System.getenv("OS").equals("Windows_NT")) {
             COMMENTARY = "REM";
             SEPARATOR  = "\\";
@@ -45,5 +47,7 @@ public class Constants {
     public String getOS() {
         return OS;
     }
-    
+    public String getSPARKHOME(){
+        return SPARKHOME;
+    }
 }

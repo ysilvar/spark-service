@@ -12,6 +12,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.StringTokenizer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -90,10 +91,9 @@ public class ReadConfig implements Comparable<ReadConfig> {
                 pat = Pattern.compile("[^A-Z0-9._]+");
                 items = pat.split(tem);
                 try {
-                systemaVarible.put(items[1], items[2]);
-                } catch ( ArrayIndexOutOfBoundsException e) {
-                    systemaVarible = null;
-                    return;
+                    systemaVarible.put(items[1], items[2]);
+                } catch (ArrayIndexOutOfBoundsException e) {
+                    System.out.println("Error sys");
                 }
 
             }
@@ -110,8 +110,20 @@ public class ReadConfig implements Comparable<ReadConfig> {
         Matcher matcher;
         if (Constants.getInstance().getOS().equals("Windows")) {
             for (String tem1 : temp) {
+
                 if (tem1.startsWith(Constants.getInstance().getCOMMENTARY())) {
-                    
+                    String[] replace = {"REM", "-", " ", "set"};
+                    for (String rep : replace) {
+                        tem1 = tem1.replace(rep, "");
+
+                    }
+
+                    if (tem1.contains("=") && !tem1.contains(",") && !tem1.contains(")")) {
+                        String[] value = tem1.split("=");
+                        tem.add(new TableConten(false, value[0], value[1], null));
+                        //  System.out.println(value[1]);
+                    }
+
                 } else if (tem1.startsWith("set")) {
                     tem1 = tem1.replace("set", "");
                     String[] value = tem1.split("=");

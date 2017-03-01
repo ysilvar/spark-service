@@ -18,13 +18,13 @@ import javax.swing.table.DefaultTableModel;
  *
  * @author eduardo
  */
-public class InterfazGrafica extends JDialog {
+public class TableHandler extends JDialog {
 
     private JTable table;
     private DefaultTableModel model;
     private JScrollPane scroll;
 
-    public InterfazGrafica() {
+    public TableHandler() {
 
         initComponents();
         model = new DefaultTableModel(new Object[][]{},
@@ -117,6 +117,6 @@ public class InterfazGrafica extends JDialog {
     }
 
     public static void main(String[] args) {
-        new InterfazGrafica().setVisible(true);
+        new TableHandler().setVisible(true);
     }
 }

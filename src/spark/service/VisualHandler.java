@@ -20,53 +20,47 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
-import javax.swing.Timer;
 
 /**
  *
  * @author Yorlay Silva Rodriguez
  */
-public class Windows {
+public class VisualHandler {
 
-    private PopupMenu pop;
+    private PopupMenu popupMenu;
     private ImageIcon icono;
     private TrayIcon trayicon;
-    private Windows windows;
-    private GetContext contex;
+    private VisualHandler windows;
+    private ConextionHandler conextionHandler;
     private ReadConfig readConfig;
-    private boolean manualStop;
-    private InterfazGrafica interfaz;
+    private TableHandler tableHandler;
 
-    public Windows() throws FileNotFoundException, IOException {
-      
-        contex = new GetContext();
+    public VisualHandler() throws FileNotFoundException, IOException {
+
+        conextionHandler = new ConextionHandler();
+        tableHandler = new TableHandler();
         readConfig = new ReadConfig();
-
-        manualStop = false;
-        interfaz = new InterfazGrafica();
-        
         try {
-            interfaz.addData(readConfig.tableData());
+            tableHandler.addData(readConfig.tableData());
         } catch (Exception ex) {
-            
-            
+
         }
-        
 
         if (SystemTray.isSupported()) {
 
-            icono = new ImageIcon(getClass().getResource("../ok.png"));
-            // fondo = new ImageIcon(getClass().getResource("../fondo.jpg"));
-            pop = new PopupMenu();
-            MenuItem btnInterfaz = new MenuItem("Configure Slave");
-            btnInterfaz.addActionListener(new ActionListener() {
+            icono = new ImageIcon(getClass().getResource("icon.png"));
+            popupMenu = new PopupMenu();
+
+            ActionListener configSlave = new ActionListener() {
 
                 @Override
                 public void actionPerformed(ActionEvent e) {
-                    interfaz.setVisible(true);
+                    tableHandler.setVisible(true);
                 }
 
-            });
+            };
+            MenuItem btnInterfaz = new MenuItem("Configure Slave");
+            btnInterfaz.addActionListener(configSlave);
 
             MenuItem webItem = new MenuItem("Show master in browser");
             webItem.addActionListener(new ActionListener() {
@@ -93,29 +87,23 @@ public class Windows {
                 }
             });
 
-            MenuItem action = new MenuItem(action());
+            MenuItem action = new MenuItem(conextionHandler.isManualStop()
+                    ? "Start Manual Slave" : "Stop Manual Slave");
             action.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
 
-                    try {
-                        if (!manualStop) {
-                            contex.stopSlave();
-                            System.out.println("stop------slave");
-                        }
-                    } catch (IOException ex) {
-                        Logger.getLogger(Windows.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-                    manualStop = !manualStop;
+                    conextionHandler.setManualStop();
+
                     MenuItem action = (MenuItem) e.getSource();
-                    action.setLabel(action());
+                    action.setLabel(conextionHandler.isManualStop() ? "Slave Start" : "Slave Stop");
                 }
             });
 
-            pop.add(btnInterfaz);
-            pop.add(webItem);
-            pop.add(webClient);
-            pop.add(action);
+            popupMenu.add(btnInterfaz);
+            popupMenu.add(webItem);
+            popupMenu.add(webClient);
+            popupMenu.add(action);
 
             MenuItem salir = new MenuItem("Salir");
             salir.addActionListener(new ActionListener() {
@@ -123,24 +111,27 @@ public class Windows {
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     try {
-                        contex.stopSlave();
+                        conextionHandler.stopSlave();
+                        conextionHandler.stopThread();
                     } catch (IOException ex) {
-                        Logger.getLogger(Windows.class.getName()).log(Level.SEVERE, null, ex);
+                        Logger.getLogger(VisualHandler.class.getName()).log(Level.SEVERE, null, ex);
                     }
 
                     System.exit(0);
                 }
 
             });
-            pop.addSeparator();
-            pop.add(salir);
+            popupMenu.addSeparator();
+            popupMenu.add(salir);
 
-            trayicon = new TrayIcon(icono.getImage(), "Service Slave", pop);
+            trayicon = new TrayIcon(icono.getImage(), conextionHandler.isMasterRun()
+                    ? "Slave Service:Master Running " : "Service Slave:Master Stop", popupMenu);
+            trayicon.addActionListener(configSlave);
 
             try {
                 SystemTray.getSystemTray().add(trayicon);
             } catch (AWTException e1) {
-                // TODO Auto-generated catch block
+
                 e1.printStackTrace();
             }
 
@@ -150,57 +141,30 @@ public class Windows {
 
     }
 
+    public ConextionHandler getContex() {
+        return conextionHandler;
+    }
+
+    public void setContex(ConextionHandler contex) {
+        this.conextionHandler = contex;
+    }
+
     public PopupMenu getPop() {
-        return pop;
+        return popupMenu;
     }
 
     public void setPop(PopupMenu pop) {
-        this.pop = pop;
+        this.popupMenu = pop;
     }
 
-    public boolean isManualStop() {
-        return manualStop;
-    }
+    public static void main(String arg[]) {
 
-    public void setManualStop(boolean manualStop) {
-        this.manualStop = manualStop;
-    }
-  
-    public void setContex(GetContext contex) {
-        this.contex = contex;
-    }
+        try {
 
-    public void setReadConfig(ReadConfig readConfig) {
-        this.readConfig = readConfig;
-    }
-
-    public GetContext getContex() {
-        return contex;
-    }
-
-    public ReadConfig getReadConfig() {
-        return readConfig;
-    }
-
-    public String action() {
-
-        return !contex.isSlaveRun() ? "Stop Slave" : "Start Slave";
-    }
-
-    public TrayIcon getTrayicon() {
-        return trayicon;
-    }
-
-    public void setTrayicon(TrayIcon trayicon) {
-        this.trayicon = trayicon;
-    }
-
-    public static void main(String arg[]) throws FileNotFoundException, IOException {
-        
-        Windows windows = new Windows();
-        RunWin run = new RunWin(windows);
-               run.start();
-        
+            VisualHandler windows = new VisualHandler();
+        } catch (IOException ex) {
+              new ErrorHandler().setVisible(true);
+        }
 
     }
 
