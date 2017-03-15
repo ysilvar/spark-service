@@ -12,7 +12,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.StringTokenizer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -24,11 +23,14 @@ public class ReadConfig implements Comparable<ReadConfig> {
 
     private HashMap<String, String> systemaVarible;
     private String[] config;
+    private Constants constants;
 
     public ReadConfig() throws FileNotFoundException, IOException {
+        constants = Constants.getInstance();
         systemaVarible = new HashMap<>();
-        String config = (System.getenv("SPARK_CONF_DIR") == null)
-                ? System.getenv("SPARK_HOME") + "\\conf\\spark-env.cmd" : System.getenv("SPARK_CONF_DIR") + "\\spark-env.cmd";
+        String config = (constants.getSPARK_CONF_DIR() == null)
+                ? constants.getSPARK_HOME() + "\\conf\\spark-env.cmd" : 
+                constants.getSPARK_CONF_DIR() + "\\spark-env.cmd";
 
         readFile(new File(config));
 
@@ -84,7 +86,7 @@ public class ReadConfig implements Comparable<ReadConfig> {
                     tem += s + " ";
                 }
             }
-            String label = Constants.getInstance().getOS().equals("Windows") ? "^set.+" : "^#.+";
+            String label = constants.getOS().equals("Windows") ? "^set.+" : "^#.+";
             pat = Pattern.compile(label);
             mat = pat.matcher(tem);
             if (mat.matches()) {
@@ -108,10 +110,10 @@ public class ReadConfig implements Comparable<ReadConfig> {
         ArrayList<TableConten> tem = new ArrayList<TableConten>();
         Pattern pattern;
         Matcher matcher;
-        if (Constants.getInstance().getOS().equals("Windows")) {
+        if (constants.getOS().equals("Windows")) {
             for (String tem1 : temp) {
 
-                if (tem1.startsWith(Constants.getInstance().getCOMMENTARY())) {
+                if (tem1.startsWith(constants.getCOMMENTARY())) {
                     String[] replace = {"REM", "-", " ", "set"};
                     for (String rep : replace) {
                         tem1 = tem1.replace(rep, "");
@@ -121,7 +123,7 @@ public class ReadConfig implements Comparable<ReadConfig> {
                     if (tem1.contains("=") && !tem1.contains(",") && !tem1.contains(")")) {
                         String[] value = tem1.split("=");
                         tem.add(new TableConten(false, value[0], value[1], null));
-                        //  System.out.println(value[1]);
+                       
                     }
 
                 } else if (tem1.startsWith("set")) {

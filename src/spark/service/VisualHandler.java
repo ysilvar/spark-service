@@ -38,8 +38,8 @@ public class VisualHandler {
     public VisualHandler() throws FileNotFoundException, IOException {
 
         conextionHandler = new ConextionHandler();
-        tableHandler = new TableHandler();
         readConfig = new ReadConfig();
+        tableHandler = new TableHandler(readConfig);
         try {
             tableHandler.addData(readConfig.tableData());
         } catch (Exception ex) {
@@ -96,7 +96,8 @@ public class VisualHandler {
                     conextionHandler.setManualStop();
 
                     MenuItem action = (MenuItem) e.getSource();
-                    action.setLabel(conextionHandler.isManualStop() ? "Slave Start" : "Slave Stop");
+                    action.setLabel(conextionHandler.isManualStop()
+                            ? "Start Manual Slave" : "Stop Manual Slave");
                 }
             });
 
@@ -157,13 +158,15 @@ public class VisualHandler {
         this.popupMenu = pop;
     }
 
+    
+
     public static void main(String arg[]) {
 
         try {
 
             VisualHandler windows = new VisualHandler();
         } catch (IOException ex) {
-              new ErrorHandler().setVisible(true);
+            new ErrorHandler().setVisible(true);
         }
 
     }

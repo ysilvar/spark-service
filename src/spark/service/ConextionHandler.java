@@ -37,7 +37,7 @@ public class ConextionHandler extends Thread {
         conf = new ReadConfig();
         start = true;
         manualStop = false;
-        this.start();
+        start();
     }
 
     /**
@@ -54,31 +54,25 @@ public class ConextionHandler extends Thread {
         }
         String request = "http://" + conf.getSystemVariable("SPARK_MASTER_IP") + ":"
                 + conf.getSystemVariable("SPARK_MASTER_WEBUI_PORT");
-//    masterRun = isRunning(request);
+
         setMasterRun(isRunning(request));
         setSlaveRun(isRunning("http://127.0.0.1:8081"));
-//     slaveRun = isRunning("http://127.0.0.1:8081");
 
     }
 
     private boolean isRunning(String request) throws InterruptedException {
 
         try {
-
             URL url = new URL(request);
-
             if (request.substring(0, request.indexOf(":")).equalsIgnoreCase("https")) {
-
                 HttpsURLConnection conn1 = (HttpsURLConnection) url.openConnection();
                 conn1.connect();
             } else {
-
                 URLConnection conn2 = url.openConnection();
                 conn2.connect();
-
             }
             sleep(50);
-        } catch (Exception e) {
+        } catch (IOException | InterruptedException e) {
             sleep(50);
             return false;
         }
@@ -92,11 +86,11 @@ public class ConextionHandler extends Thread {
      * @throws IOException
      * @throws Exception
      */
-    public void startSlave() throws IOException, Exception {
+    private void startSlave() throws IOException, Exception {
 
         if (masterRun) {
             System.out.println("Se conecto correctamente al master");
-            String home = System.getenv("SPARK_HOME");
+            String home = Constants.getInstance().getSPARK_HOME();
 
             List temp = chechProcess();
             startSlave(home, temp);
@@ -107,11 +101,10 @@ public class ConextionHandler extends Thread {
 
     private void startSlave(String home, List temp) throws IOException, InterruptedException {
         if (pid == null) {
-
             process = Runtime.getRuntime().exec(home + "\\sbin\\start-slave.cmd");
             Thread.sleep(150);
+            setPid(temp, chechProcess());
         }
-        setPid(temp, chechProcess());
     }
 
     /**
@@ -121,14 +114,6 @@ public class ConextionHandler extends Thread {
     public boolean isSlaveRun() {
 
         return slaveRun;
-    }
-
-    public Process getProccess() {
-        return process;
-    }
-
-    public void setProcess(Process process) {
-        this.process = process;
     }
 
     public String getPid() {
@@ -187,26 +172,28 @@ public class ConextionHandler extends Thread {
     @Override
     public void run() {
         while (start) {
-            System.out.println(manualStop);
             try {
-                runningMasterAndSlave();
-                if (!masterRun && slaveRun || manualStop) {
-                    stopSlave();
-                }
 
-                if (masterRun && !slaveRun && manualStop == false) {
-                    startSlave();
-                }
-                
+                try {
+                    runningMasterAndSlave();
+                    if (!masterRun && slaveRun || manualStop) {
+                        stopSlave();
+                    }
+                    if (masterRun && !slaveRun && manualStop == false) {
+                        startSlave();
+                    }
 
+                } catch (InterruptedException ex) {
+                    Logger.getLogger(ConextionHandler.class.getName()).log(Level.SEVERE, null, ex);
+                } catch (IOException ex) {
+                    Logger.getLogger(ConextionHandler.class.getName()).log(Level.SEVERE, null, ex);
+                } catch (Exception ex) {
+                    Logger.getLogger(ConextionHandler.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                sleep(200);
             } catch (InterruptedException ex) {
                 Logger.getLogger(ConextionHandler.class.getName()).log(Level.SEVERE, null, ex);
-            } catch (IOException ex) {
-                Logger.getLogger(ConextionHandler.class.getName()).log(Level.SEVERE, null, ex);
-            } catch (Exception ex) {
-                Logger.getLogger(ConextionHandler.class.getName()).log(Level.SEVERE, null, ex);
             }
-
         }
     }
 
@@ -220,6 +207,7 @@ public class ConextionHandler extends Thread {
 
     public void setSlaveRun(boolean slaveRun) {
         this.slaveRun = slaveRun;
+        System.out.println("El esclavo esta " + slaveRun);
     }
 
     public boolean isManualStop() {
@@ -234,5 +222,4 @@ public class ConextionHandler extends Thread {
         return masterRun;
     }
 
-    
 }

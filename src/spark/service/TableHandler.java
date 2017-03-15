@@ -5,7 +5,16 @@
  */
 package spark.service;
 
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JDialog;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
@@ -18,15 +27,89 @@ import javax.swing.table.DefaultTableModel;
  *
  * @author eduardo
  */
-public class TableHandler extends JDialog {
+public final class TableHandler extends JDialog {
 
     private JTable table;
     private DefaultTableModel model;
     private JScrollPane scroll;
+    private final String[] readConfig;
+    private ArrayList<TableConten> data;
 
-    public TableHandler() {
-
+    public TableHandler(ReadConfig readConfig) {
+        this.readConfig = readConfig.getConfig();
         initComponents();
+    }
+
+    public void addData(Object[] data) {
+        model.addRow(data);
+
+    }
+
+    public void addData(ArrayList<TableConten> data) {
+        data.stream().forEach((datatable) -> {
+            model.addRow(new Object[]{datatable.isStatus(),
+                datatable.getNameVariable(),
+                datatable.getValueVariable()
+            });
+        });
+    }
+
+    public void initComponents() {
+        setTitle("Configure Slave");
+        JMenuBar menuBar = new javax.swing.JMenuBar();
+        JMenu file = new javax.swing.JMenu();
+        JMenuItem save = new javax.swing.JMenuItem("Save");
+        JMenuItem saveAs = new javax.swing.JMenuItem("Save As");
+
+        file.setText("File");
+        file.add(save);
+        file.add(saveAs);
+        menuBar.add(file);
+
+        save.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_S,
+                java.awt.event.InputEvent.CTRL_MASK));
+        saveAs.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_S,
+                java.awt.event.InputEvent.SHIFT_MASK | java.awt.event.InputEvent.CTRL_MASK));
+
+        save.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    save();
+                } catch (IOException ex) {
+                    Logger.getLogger(TableHandler.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        });
+        setJMenuBar(menuBar);
+        scroll = new javax.swing.JScrollPane();
+        table = new javax.swing.JTable();
+
+        setMinimumSize(new java.awt.Dimension(560, 192));
+
+        scroll.setPreferredSize(new java.awt.Dimension(492, 602));
+
+        table.setModel(new javax.swing.table.DefaultTableModel(
+                new Object[][]{},
+                new String[]{}
+        ));
+        table.setAutoResizeMode(javax.swing.JTable.AUTO_RESIZE_ALL_COLUMNS);
+        scroll.setViewportView(table);
+
+        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
+        getContentPane().setLayout(layout);
+        layout.setHorizontalGroup(
+                layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addComponent(scroll, javax.swing.GroupLayout.DEFAULT_SIZE, 555, Short.MAX_VALUE)
+        );
+        layout.setVerticalGroup(
+                layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addComponent(scroll, javax.swing.GroupLayout.DEFAULT_SIZE, 192, Short.MAX_VALUE)
+        );
+
+        setLocationRelativeTo(null);
+
         model = new DefaultTableModel(new Object[][]{},
                 new String[]{
                     "Status", "Variable Name", "Variable Value"}) {
@@ -50,73 +133,60 @@ public class TableHandler extends JDialog {
         table.getTableHeader().setReorderingAllowed(false);
         table.getColumnModel().getColumn(0).setPreferredWidth(10);
 
-
     }
 
-    public void addData(Object[] data) {
-        model.addRow(data);
-    }
+    private boolean isConteins(String readConfig) {
+        for (TableConten data1 : data) {
+            if (readConfig.contains(data1.getNameVariable())) {
+                return true;
 
-    public void addData(ArrayList<TableConten> data) {
-        for (TableConten datatable : data) {
-
-            model.addRow(new Object[]{datatable.isStatus(),
-                        datatable.getNameVariable(),
-                        datatable.getValueVariable()
-                        
-            });
+            }
         }
+        return false;
     }
 
-    public void initComponents() {
-        setTitle("Configure Slave");
-        JMenuBar menuBar = new javax.swing.JMenuBar();
-        JMenu file = new javax.swing.JMenu();
-        JMenuItem save = new javax.swing.JMenuItem("Save");
-        JMenuItem saveAs = new javax.swing.JMenuItem("Save As");
-        //JMenuItem item = new javax.swing.JMenuItem();
-         file.setText("File");
-         file.add(save);
-         file.add(saveAs);
-         menuBar.add(file); 
+    private void upDateConfig() {
+        data = new ArrayList<>();
+        for (int i = 0; i < table.getRowCount(); i++) {
+            boolean status = table.getValueAt(i, 0).toString().equals("true");
 
-         save.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_S,
-              java.awt.event.InputEvent.CTRL_MASK));
-         saveAs.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_S, 
-                 java.awt.event.InputEvent.SHIFT_MASK | java.awt.event.InputEvent.CTRL_MASK));
-
-
-        setJMenuBar(menuBar);
-        scroll = new javax.swing.JScrollPane();
-        table = new javax.swing.JTable();
-
-        setMinimumSize(new java.awt.Dimension(560, 192));
-
-        scroll.setPreferredSize(new java.awt.Dimension(492, 602));
-        
-        table.setModel(new javax.swing.table.DefaultTableModel(
-                new Object[][]{},
-                new String[]{}
-        ));
-        table.setAutoResizeMode(javax.swing.JTable.AUTO_RESIZE_ALL_COLUMNS);
-        scroll.setViewportView(table);
-
-        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
-        getContentPane().setLayout(layout);
-        layout.setHorizontalGroup(
-                layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                .addComponent(scroll, javax.swing.GroupLayout.DEFAULT_SIZE, 555, Short.MAX_VALUE)
-        );
-        layout.setVerticalGroup(
-                layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                .addComponent(scroll, javax.swing.GroupLayout.DEFAULT_SIZE, 192, Short.MAX_VALUE)
-        );
-
-        setLocationRelativeTo(null);
+            data.add(new TableConten(status, table.getValueAt(i, 1).toString(),
+                    table.getValueAt(i, 2).toString(), null));
+        }
 
     }
 
-    public static void main(String[] args) {
-        new TableHandler().setVisible(true);
+    private void save() throws FileNotFoundException, IOException {
+        String config = (Constants.getInstance().getSPARK_CONF_DIR() == null)
+                ? Constants.getInstance().getSPARK_HOME() + "\\conf\\spark-env.cmd"
+                : Constants.getInstance().getSPARK_CONF_DIR() + "\\spark-env.cmd";
+        File fileConf = new File(config);
+        upDateConfig();
+        String result = "";
+        for (String readConfig1 : readConfig) {
+            boolean flag = false;
+
+            if (!isConteins(readConfig1)) {
+                result = result.concat(readConfig1).concat("\n");
+            }
+        }
+        for (TableConten data1 : data) {
+            String temp = data1.isStatus()
+                    ? Constants.getInstance().getMOD()
+                    : Constants.getInstance().getCOMMENTARY();
+            result = result.concat(temp).concat(data1.getNameVariable().concat("=").
+                    concat(data1.getValueVariable())).concat("\n");
+
+        }
+
+        System.out.println(result);
+
+        BufferedWriter writeFile = new BufferedWriter(new FileWriter(fileConf));
+
+        writeFile.write(result);
+
+        writeFile.close();
+
     }
+
 }
