@@ -9,23 +9,24 @@ package spark.service;
  *
  * @author Yorlay Silva Rodriguez
  */
-public class Constants {
-    private final String COMMENTARY;
-    private final String SEPARATOR;
-    private final String OS; 
-    private final String SPARK_HOME;
-    private final String SPARK_CONF_DIR;
-    private final String MOD;
+public final class Constants {
+    private  String COMMENTARY;
+    private  String SEPARATOR;
+    private  String OS; 
+    private final  String SPARK_HOME;
+    private final  String SPARK_CONF_DIR;
+    private  String MOD;
     
     private Constants() {
             SPARK_CONF_DIR = System.getenv("SPARK_CONF_DIR");
             SPARK_HOME = System.getenv("SPARK_HOME");
-        if (System.getenv("OS").equals("Windows_NT")) {
+            
+        if (System.getProperty("os.name").contains("Windows")) {
             COMMENTARY = "REM ";
             SEPARATOR  = "\\";
             OS = "Windows";
             MOD = "set";
-        }else{
+        }else if(System.getProperty("os.name").contains("Linux")){
           COMMENTARY = "#";
           SEPARATOR  = "/";
           OS = "Linux";

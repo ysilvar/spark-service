@@ -167,7 +167,7 @@ public final class TableHandler extends JDialog {
             boolean flag = false;
 
             if (!isConteins(readConfig1)) {
-                result = result.concat(readConfig1).concat("\n");
+                result = result.concat(readConfig1).trim().concat("\n");
             }
         }
         for (TableConten data1 : data) {
@@ -175,11 +175,9 @@ public final class TableHandler extends JDialog {
                     ? Constants.getInstance().getMOD()
                     : Constants.getInstance().getCOMMENTARY();
             result = result.concat(temp).concat(data1.getNameVariable().concat("=").
-                    concat(data1.getValueVariable())).concat("\n");
+                    concat(data1.getValueVariable())).trim().concat("\n");
 
         }
-
-        System.out.println(result);
 
         BufferedWriter writeFile = new BufferedWriter(new FileWriter(fileConf));
 

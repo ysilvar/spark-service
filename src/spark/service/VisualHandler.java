@@ -30,20 +30,20 @@ public class VisualHandler {
     private PopupMenu popupMenu;
     private ImageIcon icono;
     private TrayIcon trayicon;
-    private VisualHandler windows;
-    private ConextionHandler conextionHandler;
+
+    private ConectionHandler conectionHandler;
     private ReadConfig readConfig;
     private TableHandler tableHandler;
 
-    public VisualHandler() throws FileNotFoundException, IOException {
+    public VisualHandler() throws IOException {
 
-        conextionHandler = new ConextionHandler();
+        conectionHandler = new ConectionHandler();
         readConfig = new ReadConfig();
         tableHandler = new TableHandler(readConfig);
         try {
             tableHandler.addData(readConfig.tableData());
         } catch (Exception ex) {
-
+            
         }
 
         if (SystemTray.isSupported()) {
@@ -71,7 +71,7 @@ public class VisualHandler {
                                 + readConfig.getSystemVariable("SPARK_MASTER_IP")
                                 + ":" + readConfig.getSystemVariable("SPARK_MASTER_WEBUI_PORT")));
                     } catch (IOException e1) {
-                        e1.printStackTrace();
+                        
                     }
                 }
             });
@@ -82,21 +82,21 @@ public class VisualHandler {
                     try {
                         Desktop.getDesktop().browse(URI.create("http://127.0.0.1:8081"));
                     } catch (IOException e1) {
-                        e1.printStackTrace();
+                      
                     }
                 }
             });
 
-            MenuItem action = new MenuItem(conextionHandler.isManualStop()
+            MenuItem action = new MenuItem(conectionHandler.isManualStop()
                     ? "Start Manual Slave" : "Stop Manual Slave");
             action.addActionListener(new ActionListener() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
 
-                    conextionHandler.setManualStop();
+                    conectionHandler.setManualStop();
 
                     MenuItem action = (MenuItem) e.getSource();
-                    action.setLabel(conextionHandler.isManualStop()
+                    action.setLabel(conectionHandler.isManualStop()
                             ? "Start Manual Slave" : "Stop Manual Slave");
                 }
             });
@@ -112,8 +112,8 @@ public class VisualHandler {
                 @Override
                 public void actionPerformed(ActionEvent e) {
                     try {
-                        conextionHandler.stopSlave();
-                        conextionHandler.stopThread();
+                        conectionHandler.stopSlave();
+                        conectionHandler.stopThread();
                     } catch (IOException ex) {
                         Logger.getLogger(VisualHandler.class.getName()).log(Level.SEVERE, null, ex);
                     }
@@ -125,7 +125,7 @@ public class VisualHandler {
             popupMenu.addSeparator();
             popupMenu.add(salir);
 
-            trayicon = new TrayIcon(icono.getImage(), conextionHandler.isMasterRun()
+            trayicon = new TrayIcon(icono.getImage(), conectionHandler.isMasterRun()
                     ? "Slave Service:Master Running " : "Service Slave:Master Stop", popupMenu);
             trayicon.addActionListener(configSlave);
 
@@ -133,7 +133,7 @@ public class VisualHandler {
                 SystemTray.getSystemTray().add(trayicon);
             } catch (AWTException e1) {
 
-                e1.printStackTrace();
+               
             }
 
         } else {
@@ -142,12 +142,12 @@ public class VisualHandler {
 
     }
 
-    public ConextionHandler getContex() {
-        return conextionHandler;
+    public ConectionHandler getContex() {
+        return conectionHandler;
     }
 
-    public void setContex(ConextionHandler contex) {
-        this.conextionHandler = contex;
+    public void setContex(ConectionHandler contex) {
+        this.conectionHandler = contex;
     }
 
     public PopupMenu getPop() {
@@ -158,13 +158,11 @@ public class VisualHandler {
         this.popupMenu = pop;
     }
 
-    
-
     public static void main(String arg[]) {
 
         try {
-
-            VisualHandler windows = new VisualHandler();
+            
+            new VisualHandler();
         } catch (IOException ex) {
             new ErrorHandler().setVisible(true);
         }

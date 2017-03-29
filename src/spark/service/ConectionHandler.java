@@ -23,7 +23,7 @@ import javax.net.ssl.HttpsURLConnection;
  *
  * @author Yorlay Silva Rodriguez
  */
-public class ConextionHandler extends Thread {
+public class ConectionHandler extends Thread {
 
     private Process process;
     private String pid;
@@ -32,11 +32,13 @@ public class ConextionHandler extends Thread {
     private ReadConfig conf;
     private boolean start;
     private boolean manualStop;
+    private Constants constants;
 
-    public ConextionHandler() throws FileNotFoundException, IOException {
+    public ConectionHandler() throws FileNotFoundException, IOException {
         conf = new ReadConfig();
         start = true;
         manualStop = false;
+        constants = Constants.getInstance();
         start();
     }
 
@@ -89,21 +91,41 @@ public class ConextionHandler extends Thread {
     private void startSlave() throws IOException, Exception {
 
         if (masterRun) {
-            System.out.println("Se conecto correctamente al master");
-            String home = Constants.getInstance().getSPARK_HOME();
 
             List temp = chechProcess();
-            startSlave(home, temp);
+            startSlave(constants.getSPARK_HOME(), temp);
         } else {
             throw new Exception("Error al conectar al master");
         }
     }
 
-    private void startSlave(String home, List temp) throws IOException, InterruptedException {
+    /**
+     *
+     * @param home Is the address of the slave execution file.
+     * @param temp Is the list of the java processes that are running.
+     * @throws IOException
+     * @throws InterruptedException
+     */
+    private void startSlave(String home, List temp) throws IOException {
         if (pid == null) {
-            process = Runtime.getRuntime().exec(home + "\\sbin\\start-slave.cmd");
-            Thread.sleep(150);
-            setPid(temp, chechProcess());
+            switch (constants.getOS()) {
+                case "Windows": {
+                    process = Runtime.getRuntime().exec(home + "\\sbin\\start-slave.cmd");
+                    try {
+                        Thread.sleep(150);
+                    } catch (InterruptedException ex) {
+                        Logger.getLogger(ConectionHandler.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                    setPid(temp, chechProcess());
+                    break;
+                }
+                case "Linux":{
+               process = Runtime.getRuntime().exec(home + "\\sbin\\spark-env.sh");
+
+                    break;
+                }
+            }
+
         }
     }
 
@@ -143,16 +165,19 @@ public class ConextionHandler extends Thread {
             readLine = br.readLine();
 
         }
+
         return list;
     }
 
     private void setPid(List<String> a, List<String> b) {
         String tem = ManagementFactory.getRuntimeMXBean().getName();
         tem = tem.substring(0, tem.indexOf("@"));
+
         if (pid == null) {
 
             for (String b1 : b) {
                 for (String a1 : a) {
+
                     if (!b1.equals(a1) && !b1.equals(tem)) {
                         pid = b1;
 
@@ -161,7 +186,7 @@ public class ConextionHandler extends Thread {
                 }
             }
         }
-        System.out.println("pid " + pid);
+
     }
 
     public void stopSlave() throws IOException {
@@ -177,22 +202,24 @@ public class ConextionHandler extends Thread {
                 try {
                     runningMasterAndSlave();
                     if (!masterRun && slaveRun || manualStop) {
+
                         stopSlave();
                     }
-                    if (masterRun && !slaveRun && manualStop == false) {
+                    if (masterRun && !slaveRun && !manualStop) {
+
                         startSlave();
                     }
 
                 } catch (InterruptedException ex) {
-                    Logger.getLogger(ConextionHandler.class.getName()).log(Level.SEVERE, null, ex);
+                    Logger.getLogger(ConectionHandler.class.getName()).log(Level.SEVERE, null, ex);
                 } catch (IOException ex) {
-                    Logger.getLogger(ConextionHandler.class.getName()).log(Level.SEVERE, null, ex);
+                    Logger.getLogger(ConectionHandler.class.getName()).log(Level.SEVERE, null, ex);
                 } catch (Exception ex) {
-                    Logger.getLogger(ConextionHandler.class.getName()).log(Level.SEVERE, null, ex);
+                    Logger.getLogger(ConectionHandler.class.getName()).log(Level.SEVERE, null, ex);
                 }
                 sleep(200);
             } catch (InterruptedException ex) {
-                Logger.getLogger(ConextionHandler.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(ConectionHandler.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
     }
@@ -207,7 +234,7 @@ public class ConextionHandler extends Thread {
 
     public void setSlaveRun(boolean slaveRun) {
         this.slaveRun = slaveRun;
-        System.out.println("El esclavo esta " + slaveRun);
+
     }
 
     public boolean isManualStop() {
