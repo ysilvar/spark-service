@@ -13,6 +13,7 @@ import java.awt.SystemTray;
 import java.awt.TrayIcon;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URI;
@@ -25,7 +26,7 @@ import javax.swing.JOptionPane;
  *
  * @author Yorlay Silva Rodriguez
  */
-public class VisualHandler {
+public class VisualHandler extends Thread{
 
     private PopupMenu popupMenu;
     private ImageIcon icono;
@@ -36,14 +37,13 @@ public class VisualHandler {
     private TableHandler tableHandler;
 
     public VisualHandler() throws IOException {
-
         conectionHandler = new ConectionHandler();
         readConfig = new ReadConfig();
         tableHandler = new TableHandler(readConfig);
         try {
             tableHandler.addData(readConfig.tableData());
         } catch (Exception ex) {
-            
+
         }
 
         if (SystemTray.isSupported()) {
@@ -71,7 +71,7 @@ public class VisualHandler {
                                 + readConfig.getSystemVariable("SPARK_MASTER_IP")
                                 + ":" + readConfig.getSystemVariable("SPARK_MASTER_WEBUI_PORT")));
                     } catch (IOException e1) {
-                        
+
                     }
                 }
             });
@@ -82,7 +82,7 @@ public class VisualHandler {
                     try {
                         Desktop.getDesktop().browse(URI.create("http://127.0.0.1:8081"));
                     } catch (IOException e1) {
-                      
+
                     }
                 }
             });
@@ -128,12 +128,15 @@ public class VisualHandler {
             trayicon = new TrayIcon(icono.getImage(), conectionHandler.isMasterRun()
                     ? "Slave Service:Master Running " : "Service Slave:Master Stop", popupMenu);
             trayicon.addActionListener(configSlave);
-
+            trayicon.addMouseListener(new java.awt.event.MouseAdapter() {
+                public void mouseEntered(java.awt.event.MouseEvent evt) {
+                    System.out.println("sdsadhsa");
+                }
+            });
             try {
                 SystemTray.getSystemTray().add(trayicon);
             } catch (AWTException e1) {
 
-               
             }
 
         } else {
@@ -158,15 +161,19 @@ public class VisualHandler {
         this.popupMenu = pop;
     }
 
-    public static void main(String arg[]) {
-
-        try {
-            
-            new VisualHandler();
-        } catch (IOException ex) {
-            new ErrorHandler().setVisible(true);
+    @Override
+    public void run() {
+        while(true){
+            trayicon.setToolTip(conectionHandler.isMasterRun()
+                    ? "Slave Service:Master Running " : "Service Slave:Master Stop");
+            System.out.println("sdjfjhdfs");
+            try {
+                Thread.sleep(2000);
+            } catch (InterruptedException ex) {
+                Logger.getLogger(VisualHandler.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
-
     }
 
+    
 }

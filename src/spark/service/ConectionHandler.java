@@ -18,6 +18,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.net.ssl.HttpsURLConnection;
+import sun.misc.VM;
 
 /**
  *
@@ -36,6 +37,7 @@ public class ConectionHandler extends Thread {
 
     public ConectionHandler() throws FileNotFoundException, IOException {
         conf = new ReadConfig();
+
         start = true;
         manualStop = false;
         constants = Constants.getInstance();
@@ -54,6 +56,7 @@ public class ConectionHandler extends Thread {
 
             conf = nvo;
         }
+        
         String request = "http://" + conf.getSystemVariable("SPARK_MASTER_IP") + ":"
                 + conf.getSystemVariable("SPARK_MASTER_WEBUI_PORT");
 
@@ -89,11 +92,29 @@ public class ConectionHandler extends Thread {
      * @throws Exception
      */
     private void startSlave() throws IOException, Exception {
-
         if (masterRun) {
+               
+            switch (constants.getOS()) {
+                case "Windows": {
+                    List temp = chechProcess();
+                    startSlave(constants.getSPARK_HOME(), temp);
+                    break;
+                }
+                case "Linux": {
+                    if (process == null)  {
+                  
+                    process = Runtime.getRuntime().exec(constants.getSPARK_HOME() + 
+                            "/sbin/start-slave.sh spark://"+conf.getSystemVariable("SPARK_MASTER_IP")+":7077"
+                     
+                    );
+                       Thread.sleep(50);
+                        
+                    }
+                    
+                }
 
-            List temp = chechProcess();
-            startSlave(constants.getSPARK_HOME(), temp);
+            }
+
         } else {
             throw new Exception("Error al conectar al master");
         }
@@ -106,25 +127,15 @@ public class ConectionHandler extends Thread {
      * @throws IOException
      * @throws InterruptedException
      */
-    private void startSlave(String home, List temp) throws IOException {
+    private void startSlave(String home, List temp) throws IOException, InterruptedException {
         if (pid == null) {
-            switch (constants.getOS()) {
-                case "Windows": {
-                    process = Runtime.getRuntime().exec(home + "\\sbin\\start-slave.cmd");
-                    try {
-                        Thread.sleep(150);
-                    } catch (InterruptedException ex) {
-                        Logger.getLogger(ConectionHandler.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-                    setPid(temp, chechProcess());
-                    break;
-                }
-                case "Linux":{
-               process = Runtime.getRuntime().exec(home + "\\sbin\\spark-env.sh");
-
-                    break;
-                }
+            process = Runtime.getRuntime().exec(home + "\\sbin\\start-slave.cmd");
+            try {
+                Thread.sleep(150);
+            } catch (InterruptedException ex) {
+                Logger.getLogger(ConectionHandler.class.getName()).log(Level.SEVERE, null, ex);
             }
+            setPid(temp, chechProcess());
 
         }
     }
@@ -190,23 +201,37 @@ public class ConectionHandler extends Thread {
     }
 
     public void stopSlave() throws IOException {
-        Process tem = Runtime.getRuntime().exec("taskkill /pid " + getPid() + " /f");
-        pid = null;
+        switch (constants.getOS()) {
+            case "Windows": {
+                Process win = Runtime.getRuntime().exec("taskkill /pid " + getPid() + " /f");
+                pid = null;
+                break;
+            }
+            case "Linux": {
+                Process linux = Runtime.getRuntime().exec(constants.getSPARK_HOME() + "/sbin/stop-slave.sh");
+                process = null;
+                break;
+            }
+
+        }
+
     }
 
     @Override
     public void run() {
+        
         while (start) {
             try {
 
                 try {
                     runningMasterAndSlave();
+                    
                     if (!masterRun && slaveRun || manualStop) {
 
                         stopSlave();
                     }
                     if (masterRun && !slaveRun && !manualStop) {
-
+                       
                         startSlave();
                     }
 
@@ -243,9 +268,11 @@ public class ConectionHandler extends Thread {
 
     public void setManualStop() {
         this.manualStop = !this.manualStop;
+        
     }
 
     public boolean isMasterRun() {
+        System.out.println("masterRun "+masterRun);
         return masterRun;
     }
 

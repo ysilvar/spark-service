@@ -34,8 +34,10 @@ public final class TableHandler extends JDialog {
     private JScrollPane scroll;
     private final String[] readConfig;
     private ArrayList<TableConten> data;
+    private Constants constants;
 
     public TableHandler(ReadConfig readConfig) {
+        constants = Constants.getInstance();
         this.readConfig = readConfig.getConfig();
         initComponents();
     }
@@ -157,10 +159,8 @@ public final class TableHandler extends JDialog {
     }
 
     private void save() throws FileNotFoundException, IOException {
-        String config = (Constants.getInstance().getSPARK_CONF_DIR() == null)
-                ? Constants.getInstance().getSPARK_HOME() + "\\conf\\spark-env.cmd"
-                : Constants.getInstance().getSPARK_CONF_DIR() + "\\spark-env.cmd";
-        File fileConf = new File(config);
+        
+        File fileConf = new File(constants.getSPARK_CONF_DIR());
         upDateConfig();
         String result = "";
         for (String readConfig1 : readConfig) {

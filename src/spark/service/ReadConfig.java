@@ -28,21 +28,8 @@ public final class ReadConfig implements Comparable<ReadConfig> {
     public ReadConfig() throws IOException {
         constants = Constants.getInstance();
         systemaVarible = new HashMap<>();
-        String fileConfig = null;
-        switch (constants.getOS()) {
-            case "Linux":
-                fileConfig = (constants.getSPARK_CONF_DIR() == null)
-                        ? constants.getSPARK_HOME() + "\\conf\\spark-env.sh"
-                        : constants.getSPARK_CONF_DIR() + "\\spark-env.sh";
-                break;
-            case "Windows":
-                fileConfig = (constants.getSPARK_CONF_DIR() == null)
-                        ? constants.getSPARK_HOME() + "\\conf\\spark-env.cmd"
-                        : constants.getSPARK_CONF_DIR() + "\\spark-env.cmd";
-                break;
-        }
-
-        readFile(new File(fileConfig));
+       
+        readFile(new File(constants.getSPARK_CONF_DIR()));
 
     }
 
@@ -77,87 +64,86 @@ public final class ReadConfig implements Comparable<ReadConfig> {
      * @throws IOException
      */
     public void readFile(File file) throws IOException {
-
         FileReader fil = new FileReader(file);
         BufferedReader read = new BufferedReader(fil);
-
         String line = read.readLine();
         String result = "";
+
         while (line != null) {
-            Pattern pat = Pattern.compile("[^a-zA-Z_:.=0-9/$}{)(%-]+");
-            Matcher mat;
-            String[] items = pat.split(line);
-            String tem = "";
-            for (String s : items) {
-                pat = Pattern.compile("[a-zA-Z_:.=0-9/$}{)(%-]+");
-                mat = pat.matcher(s);
+            if (constants.getOS().equals("Windows")) {
+
+                Pattern pat = Pattern.compile("[^a-zA-Z_:.=0-9/$}{)(%-]+");
+                Matcher mat;
+                String[] items = pat.split(line);
+                String tem = "";
+                for (String s : items) {
+                    pat = Pattern.compile("[a-zA-Z_:.=0-9/$}{)(%-]+");
+                    mat = pat.matcher(s);
+
+                    if (mat.matches()) {
+                        tem += s + " ";
+                    }
+                }
+                String label = "^set.+";
+
+                pat = Pattern.compile(label);
+                mat = pat.matcher(tem);
 
                 if (mat.matches()) {
-                    tem += s + " ";
-                }
-            }
-            String label = null;
-            switch (constants.getOS()) {
-                case "Windows":
-                    label = "^set.+";
-                    break;
-                case "Linux":
-                    label = "^#.+";
-                    break;
-            }
-            pat = Pattern.compile(label);
-            mat = pat.matcher(tem);
-            if (mat.matches()) {
-                pat = Pattern.compile("[^A-Z0-9._]+");
-                items = pat.split(tem);
-                try {
-                    systemaVarible.put(items[1], items[2]);
-                } catch (ArrayIndexOutOfBoundsException e) {
+                    pat = Pattern.compile("[^A-Z0-9._]+");
+                    items = pat.split(tem);
+                    try {
+                        systemaVarible.put(items[1], items[2]);
+
+                    } catch (ArrayIndexOutOfBoundsException e) {
+
+                    }
 
                 }
-
+                result += tem + "\n";
+            } else if (constants.getOS().equals("Linux")) {
+                systemaVarible.put(line.split("=")[0].trim(),line.split("=")[1]);
+                 result += line + "\n";
             }
-            result += tem + "\n";
-            line = read.readLine();
+                line = read.readLine();
+
         }
         config = result.split("\n");
     }
 // hay que hacer un nuevo metodo
+
     public ArrayList<TableConten> tableData() throws Exception {
         String[] temp = config;
         ArrayList<TableConten> tem = new ArrayList<TableConten>();
         Pattern pattern;
         Matcher matcher;
-        
-            for (String tem1 : temp) {
 
-                if (tem1.startsWith(constants.getCOMMENTARY())) {
-                    String[] replace = {constants.getCOMMENTARY(), "-", " ",constants.getMOD() };
-                    for (String rep : replace) {
-                        tem1 = tem1.replace(rep, "");
+        for (String tem1 : temp) {
 
-                    }
-
-                    if (tem1.contains("=") && !tem1.contains(",") && !tem1.contains(")")) {
-                        String[] value = tem1.split("=");
-                        tem.add(new TableConten(false, value[0], value[1], null));
-
-                    }
-
-                } else if (tem1.startsWith(constants.getMOD())) {
-                    tem1 = tem1.replace(constants.getMOD(), "");
-                    String[] value = tem1.split("=");
-
-                    tem.add(new TableConten(true, value[0], value[1], null));
+            if (tem1.startsWith(constants.getCOMMENTARY())) {
+                String[] replace = {constants.getCOMMENTARY(), "-", " ", constants.getMOD()};
+                for (String rep : replace) {
+                    tem1 = tem1.replace(rep, "");
 
                 }
 
+                if (tem1.contains("=") && !tem1.contains(",") && !tem1.contains(")")) {
+                    String[] value = tem1.split("=");
+                    tem.add(new TableConten(false, value[0], value[1], null));
+
+                }
+
+            } else if (tem1.startsWith(constants.getMOD())) {
+                tem1 = tem1.replace(constants.getMOD(), "");
+                String[] value = tem1.split("=");
+
+                tem.add(new TableConten(true, value[0], value[1], null));
+
             }
 
-        
+        }
 
         return tem;
     }
-    
-    
+
 }

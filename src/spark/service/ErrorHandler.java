@@ -21,15 +21,15 @@ public class ErrorHandler extends JDialog {
         setModal(true);
         setResizable(false);
 
-        Image logo = Toolkit.getDefaultToolkit().getImage(getClass().getResource("/spark/service/icon.png"));
-        setIconImage(logo);
+//        Image logo = Toolkit.getDefaultToolkit().getImage(getClass().getResource("/spark/service/icon.png"));
+       // setIconImage(logo);
         
         JLabel icon = new javax.swing.JLabel();
         JLabel mensaje = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
 
-        icon.setIcon(new javax.swing.ImageIcon(getClass().getResource("/spark/service/error.png"))); // NOI18N
+//        icon.setIcon(new javax.swing.ImageIcon(getClass().getResource("/spark/service/error.png"))); // NOI18N
         icon.setText("jLabel1");
 
         mensaje.setFont(new java.awt.Font("Tahoma", 0, 20)); // NOI18N
