@@ -26,7 +26,7 @@ import javax.swing.JOptionPane;
  *
  * @author Yorlay Silva Rodriguez
  */
-public class VisualHandler extends Thread{
+public class VisualHandler implements Runnable{
 
     private PopupMenu popupMenu;
     private ImageIcon icono;
@@ -35,7 +35,7 @@ public class VisualHandler extends Thread{
     private ConectionHandler conectionHandler;
     private ReadConfig readConfig;
     private TableHandler tableHandler;
-
+    
     public VisualHandler() throws IOException {
         conectionHandler = new ConectionHandler();
         readConfig = new ReadConfig();
@@ -51,54 +51,38 @@ public class VisualHandler extends Thread{
             icono = new ImageIcon(getClass().getResource("icon.png"));
             popupMenu = new PopupMenu();
 
-            ActionListener configSlave = new ActionListener() {
-
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    tableHandler.setVisible(true);
-                }
-
+            ActionListener configSlave = (ActionEvent e) -> {
+                tableHandler.setVisible(true);
             };
             MenuItem btnInterfaz = new MenuItem("Configure Slave");
             btnInterfaz.addActionListener(configSlave);
 
             MenuItem webItem = new MenuItem("Show master in browser");
-            webItem.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    try {
-                        Desktop.getDesktop().browse(URI.create("http://"
-                                + readConfig.getSystemVariable("SPARK_MASTER_IP")
-                                + ":" + readConfig.getSystemVariable("SPARK_MASTER_WEBUI_PORT")));
-                    } catch (IOException e1) {
-
-                    }
+            webItem.addActionListener((ActionEvent e) -> {
+                try {
+                    Desktop.getDesktop().browse(URI.create("http://"
+                            + readConfig.getSystemVariable("SPARK_MASTER_IP")
+                            + ":" + readConfig.getSystemVariable("SPARK_MASTER_WEBUI_PORT")));
+                } catch (IOException e1) {
+                    
                 }
             });
             MenuItem webClient = new MenuItem("Show slave in browser");
-            webClient.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    try {
-                        Desktop.getDesktop().browse(URI.create("http://127.0.0.1:8081"));
-                    } catch (IOException e1) {
-
-                    }
+            webClient.addActionListener((ActionEvent e) -> {
+                try {
+                    Desktop.getDesktop().browse(URI.create("http://127.0.0.1:8081"));
+                } catch (IOException e1) {
+                    
                 }
             });
 
             MenuItem action = new MenuItem(conectionHandler.isManualStop()
                     ? "Start Manual Slave" : "Stop Manual Slave");
-            action.addActionListener(new ActionListener() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-
-                    conectionHandler.setManualStop();
-
-                    MenuItem action = (MenuItem) e.getSource();
-                    action.setLabel(conectionHandler.isManualStop()
-                            ? "Start Manual Slave" : "Stop Manual Slave");
-                }
+            action.addActionListener((ActionEvent e) -> {
+                conectionHandler.setManualStop();
+                MenuItem action1 = (MenuItem) e.getSource();
+                action1.setLabel(conectionHandler.isManualStop()
+                        ? "Start Manual Slave" : "Stop Manual Slave");
             });
 
             popupMenu.add(btnInterfaz);
@@ -107,32 +91,22 @@ public class VisualHandler extends Thread{
             popupMenu.add(action);
 
             MenuItem salir = new MenuItem("Salir");
-            salir.addActionListener(new ActionListener() {
-
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    try {
-                        conectionHandler.stopSlave();
-                        conectionHandler.stopThread();
-                    } catch (IOException ex) {
-                        Logger.getLogger(VisualHandler.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-
-                    System.exit(0);
+            salir.addActionListener((ActionEvent e) -> {
+                try {
+                    conectionHandler.stopSlave();
+                    conectionHandler.stopThread();
+                } catch (IOException ex) {
+                    Logger.getLogger(VisualHandler.class.getName()).log(Level.SEVERE, null, ex);
                 }
 
+                System.exit(0);
             });
             popupMenu.addSeparator();
             popupMenu.add(salir);
 
-            trayicon = new TrayIcon(icono.getImage(), conectionHandler.isMasterRun()
-                    ? "Slave Service:Master Running " : "Service Slave:Master Stop", popupMenu);
+            trayicon = new TrayIcon(icono.getImage(), status(), popupMenu);
             trayicon.addActionListener(configSlave);
-            trayicon.addMouseListener(new java.awt.event.MouseAdapter() {
-                public void mouseEntered(java.awt.event.MouseEvent evt) {
-                    System.out.println("sdsadhsa");
-                }
-            });
+            
             try {
                 SystemTray.getSystemTray().add(trayicon);
             } catch (AWTException e1) {
@@ -144,7 +118,10 @@ public class VisualHandler extends Thread{
         }
 
     }
-
+    private String status(){
+    return conectionHandler.isMasterRun()? "Slave Service:Master Running "
+            : "Service Slave:Master Stop";
+    }
     public ConectionHandler getContex() {
         return conectionHandler;
     }
@@ -164,11 +141,10 @@ public class VisualHandler extends Thread{
     @Override
     public void run() {
         while(true){
-            trayicon.setToolTip(conectionHandler.isMasterRun()
-                    ? "Slave Service:Master Running " : "Service Slave:Master Stop");
-            System.out.println("sdjfjhdfs");
+            trayicon.setToolTip(status());
+            
             try {
-                Thread.sleep(2000);
+                Thread.sleep(1000);
             } catch (InterruptedException ex) {
                 Logger.getLogger(VisualHandler.class.getName()).log(Level.SEVERE, null, ex);
             }

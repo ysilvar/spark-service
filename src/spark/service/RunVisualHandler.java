@@ -6,6 +6,9 @@
 package spark.service;
 
 import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.swing.JOptionPane;
 
 /**
  *
@@ -13,13 +16,19 @@ import java.io.IOException;
  */
 public class RunVisualHandler {
 
-    public static void main(String arg[]) throws IOException {
-        
-                    VisualHandler handler = new VisualHandler();
-                                    handler.run();
-                    
-            }
-       
+    public static void main(String arg[]) {
+
+        VisualHandler handler;
+
+        try {
+            handler = new VisualHandler();
+            handler.run();
+        } catch (IOException ex) {
+            JOptionPane.showMessageDialog(null, "Verify that the spark setting is correct..");
+
+            Logger.getLogger(RunVisualHandler.class.getName()).log(Level.SEVERE, null, ex);
+        }
 
     }
-    
+
+}

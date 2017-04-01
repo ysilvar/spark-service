@@ -37,7 +37,6 @@ public class ConectionHandler extends Thread {
 
     public ConectionHandler() throws FileNotFoundException, IOException {
         conf = new ReadConfig();
-
         start = true;
         manualStop = false;
         constants = Constants.getInstance();
@@ -272,7 +271,7 @@ public class ConectionHandler extends Thread {
     }
 
     public boolean isMasterRun() {
-        System.out.println("masterRun "+masterRun);
+        
         return masterRun;
     }
 

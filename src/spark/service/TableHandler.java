@@ -73,15 +73,11 @@ public final class TableHandler extends JDialog {
         saveAs.setAccelerator(javax.swing.KeyStroke.getKeyStroke(java.awt.event.KeyEvent.VK_S,
                 java.awt.event.InputEvent.SHIFT_MASK | java.awt.event.InputEvent.CTRL_MASK));
 
-        save.addActionListener(new ActionListener() {
-
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                try {
-                    save();
-                } catch (IOException ex) {
-                    Logger.getLogger(TableHandler.class.getName()).log(Level.SEVERE, null, ex);
-                }
+        save.addActionListener((ActionEvent e) -> {
+            try {
+                save();
+            } catch (IOException ex) {
+                Logger.getLogger(TableHandler.class.getName()).log(Level.SEVERE, null, ex);
             }
         });
         setJMenuBar(menuBar);
@@ -138,15 +134,14 @@ public final class TableHandler extends JDialog {
     }
 
     private boolean isConteins(String readConfig) {
-        for (TableConten data1 : data) {
-            if (readConfig.contains(data1.getNameVariable())) {
-                return true;
-
-            }
+        if (data.stream().anyMatch((data1) -> (readConfig.contains(data1.getNameVariable())))) {
+            return true;
         }
         return false;
     }
-
+    /**
+     * Update the "ArrayList data" with the values shown in the table
+     */
     private void upDateConfig() {
         data = new ArrayList<>();
         for (int i = 0; i < table.getRowCount(); i++) {
@@ -157,7 +152,11 @@ public final class TableHandler extends JDialog {
         }
 
     }
-
+    /**
+     * Update configuration file
+     * @throws FileNotFoundException
+     * @throws IOException 
+     */
     private void save() throws FileNotFoundException, IOException {
         
         File fileConf = new File(constants.getSPARK_CONF_DIR());
