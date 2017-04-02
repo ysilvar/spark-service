@@ -13,8 +13,6 @@ import java.awt.SystemTray;
 import java.awt.TrayIcon;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URI;
 import java.util.logging.Level;
@@ -35,9 +33,17 @@ public class VisualHandler implements Runnable{
     private ConectionHandler conectionHandler;
     private ReadConfig readConfig;
     private TableHandler tableHandler;
+    private MultiServer server;
+    private MenuItem manualStopStart;
     
     public VisualHandler() throws IOException {
+        
         conectionHandler = new ConectionHandler();
+         
+                
+        server = new MultiServer(4444,new Protocol(conectionHandler));
+     
+         
         readConfig = new ReadConfig();
         tableHandler = new TableHandler(readConfig);
         try {
@@ -76,19 +82,17 @@ public class VisualHandler implements Runnable{
                 }
             });
 
-            MenuItem action = new MenuItem(conectionHandler.isManualStop()
-                    ? "Start Manual Slave" : "Stop Manual Slave");
-            action.addActionListener((ActionEvent e) -> {
-                conectionHandler.setManualStop();
+            manualStopStart = new MenuItem(manualSlaveStopStart());
+            manualStopStart.addActionListener((ActionEvent e) -> {
+                conectionHandler.setManualStopOrStart();
                 MenuItem action1 = (MenuItem) e.getSource();
-                action1.setLabel(conectionHandler.isManualStop()
-                        ? "Start Manual Slave" : "Stop Manual Slave");
+                action1.setLabel(manualSlaveStopStart());
             });
 
             popupMenu.add(btnInterfaz);
             popupMenu.add(webItem);
             popupMenu.add(webClient);
-            popupMenu.add(action);
+            popupMenu.add(manualStopStart);
 
             MenuItem salir = new MenuItem("Salir");
             salir.addActionListener((ActionEvent e) -> {
@@ -104,7 +108,7 @@ public class VisualHandler implements Runnable{
             popupMenu.addSeparator();
             popupMenu.add(salir);
 
-            trayicon = new TrayIcon(icono.getImage(), status(), popupMenu);
+            trayicon = new TrayIcon(icono.getImage(), statusMaster(), popupMenu);
             trayicon.addActionListener(configSlave);
             
             try {
@@ -118,9 +122,14 @@ public class VisualHandler implements Runnable{
         }
 
     }
-    private String status(){
+    private String statusMaster(){
     return conectionHandler.isMasterRun()? "Slave Service:Master Running "
             : "Service Slave:Master Stop";
+    }
+    private String manualSlaveStopStart(){
+    
+    return conectionHandler.isManualStop()? "Start Manual Slave" : 
+            "Stop Manual Slave";
     }
     public ConectionHandler getContex() {
         return conectionHandler;
@@ -141,8 +150,8 @@ public class VisualHandler implements Runnable{
     @Override
     public void run() {
         while(true){
-            trayicon.setToolTip(status());
-            
+            trayicon.setToolTip(statusMaster());
+            manualStopStart.setLabel(manualSlaveStopStart());
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException ex) {

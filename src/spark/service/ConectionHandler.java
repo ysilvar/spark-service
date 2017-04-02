@@ -226,7 +226,7 @@ public class ConectionHandler extends Thread {
                     runningMasterAndSlave();
                     
                     if (!masterRun && slaveRun || manualStop) {
-
+                        System.out.println("rrrrrrrrrrrrrrrrrrrrrrrrrrrrr");
                         stopSlave();
                     }
                     if (masterRun && !slaveRun && !manualStop) {
@@ -265,7 +265,8 @@ public class ConectionHandler extends Thread {
         return manualStop;
     }
 
-    public void setManualStop() {
+    public void setManualStopOrStart() {
+        System.out.println("Entro aqui");
         this.manualStop = !this.manualStop;
         
     }
