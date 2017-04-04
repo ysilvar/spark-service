@@ -6,25 +6,28 @@
 package spark.service;
 
 public class Protocol {
-private ConectionHandler conectionHandler;
+private VisualHandler visual;
 
-    public Protocol(ConectionHandler conectionHandler) {
-        this.conectionHandler = conectionHandler;
+    public Protocol(VisualHandler visual) {
+        this.visual = visual;
     }
 
     public String processInput(String theInput) {
 
         switch (theInput) {
-            case "StopSlave":
-                conectionHandler.setManualStopOrStart();
-                return theInput;
+            case "stop-slave":
+                visual.getConectionHandler().manualStopSlave();
+                return "Sucess"+theInput;
 
-            case "StartSlave":
-               conectionHandler.setManualStopOrStart();
+            case "start-slave":
+               visual.getConectionHandler().manualStartSlave();
 
-                return theInput;
+                return "Sucess"+theInput;
+            case "close":
+                visual.close();
+                return "close";
         }
 
-        return "sto";
+        return "df";
     }
 }

@@ -226,7 +226,7 @@ public class ConectionHandler extends Thread {
                     runningMasterAndSlave();
                     
                     if (!masterRun && slaveRun || manualStop) {
-                        System.out.println("rrrrrrrrrrrrrrrrrrrrrrrrrrrrr");
+                        
                         stopSlave();
                     }
                     if (masterRun && !slaveRun && !manualStop) {
@@ -265,10 +265,12 @@ public class ConectionHandler extends Thread {
         return manualStop;
     }
 
-    public void setManualStopOrStart() {
-        System.out.println("Entro aqui");
-        this.manualStop = !this.manualStop;
-        
+    
+    public void manualStopSlave(){
+    this.manualStop = true;
+    }
+    public void manualStartSlave(){
+    this.manualStop = false;
     }
 
     public boolean isMasterRun() {

@@ -10,28 +10,30 @@ import java.net.ServerSocket;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class MultiServer extends Thread{
+public class MultiServer implements Runnable{
 
         ServerSocket serverSocket = null;
         int port;
         Protocol protocol;
+        boolean listening ;
 
     public MultiServer(int port, Protocol protocol) {
         this.port = port;
         this.protocol = protocol;
-        start();
+        listening = true;
+        
     }
         
-        
+    public void stopThead(){
+    listening = false;
     
-//    public static void main(String[] args) {
-//     
-//        MultiServer server = new MultiServer(4444);
-//    }
+    }
+    
+
 
     @Override
     public void run() {
-       boolean listening = true;
+       
 
         try {
             serverSocket = new ServerSocket(port);

@@ -30,12 +30,13 @@ public class MultiServerThread extends Thread {
 
 	    String inputLine, outputLine;
 	    
-	    outputLine = protocol.processInput("sd");
+	    outputLine = protocol.processInput("sddsfdsfdsfdsf");
 	    out.println(outputLine);
 
 	    while ((inputLine = in.readLine()) != null) {
 		outputLine = protocol.processInput(inputLine);
 		out.println(outputLine);
+                System.out.println("fggf"+outputLine);
 		if (outputLine.equals("stop")){
                     System.out.println("Se paro");
 		    break;
@@ -46,7 +47,6 @@ public class MultiServerThread extends Thread {
 	    socket.close();
 
 	} catch (IOException e) {
-	    e.printStackTrace();
 	}
     }
 }

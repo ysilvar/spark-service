@@ -21,8 +21,16 @@ public class RunVisualHandler {
         VisualHandler handler;
 
         try {
-            handler = new VisualHandler();
-            handler.run();
+            if (arg.length > 0) {
+
+                 handler = new VisualHandler(false);
+                handler.run();
+               
+            } else {
+                handler = new VisualHandler();
+                handler.run();
+
+            }
         } catch (IOException ex) {
             JOptionPane.showMessageDialog(null, "Verify that the spark setting is correct..");
 
